@@ -1,1 +1,476 @@
 {% extends "dashboard_base.html" %}
+{% load i18n %}
+{% load base_tags %}
+{% load app_filters %}
+
+{% block dashboard_breadcrumb %} 
+    <a href="{% url "dashboard_detail" %}?page=earthquake" class="breadcrumb">{% trans "Earthquake" %}</a>
+    {% include "links_title.html" %}
+{% endblock dashboard_breadcrumb %}
+
+{% block dashboard_content %}
+    <div class="row">
+        {% include "qlink_list.html" %}
+        <div class="input-field col s12 xl4 right">
+            <select id="select_evt" class="right" onchange="location = '?page=earthquake&eq_event='+this.value+'{{add_link}}';">
+                {% for list in eq_list %}
+                    <option {% if list.selected %} selected {% endif %} value="{{ list.event_code }}">{{ list.detail_title }}</option>
+                {% endfor %}
+            </select>
+            <label for="select_evt">{% trans "Choose Earthquake Event" %}</label>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">
+                        {% trans "Map" %}
+                    </span>
+                    <div class="row">
+                        <div class="col s12 l3 xl2">
+                            <div id="layercontrol">
+                                <div class="input-field">
+                                    <select id="erthqkOpt">
+                                        <option value="erthqk_checkbox_pop">Population Affected</option>
+                                        <option value="erthqk_checkbox_settl">Settlement Affected</option>
+                                        <option value="erthqk_checkbox_build">Building Affected</option>
+                                    </select>
+                                    <label for="haccessOpt">Choose Layer :</label>
+                                </div>
+
+                                <div class="input-field">
+                                    <span>WMS Layer</span>
+                                    <div class="switch right">
+                                        <label>
+                                            <!-- data attribute will be used in javascript to know which layer to add or remove from the map -->
+                                            <input type="checkbox" data-type=wms data-layer=erthqk checked>
+                                            <span class="lever"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <label for="lvl">Choose Level :</label>
+                                <div id="lvl" class="lvl_choice erthqk_checkbox">
+                                    <div class="row erthqk_checkbox_pop erthqk_opt">
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_weak">
+                                                <span>Weak</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_light">
+                                                <span>Light</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_moderate">
+                                                <span>Moderate</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_strong">
+                                                <span>Strong</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_verystrong">
+                                                <span>Very-strong</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_severe">
+                                                <span>Severe</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_violent">
+                                                <span>Violent</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="pop_shake_extreme">
+                                                <span>Extreme</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div style='display:none;' class="row erthqk_checkbox_settl erthqk_opt">
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_weak">
+                                                <span>Weak</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_light">
+                                                <span>Light</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_moderate">
+                                                <span>Moderate</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_strong">
+                                                <span>Strong</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_verystrong">
+                                                <span>Very-strong</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_severe">
+                                                <span>Severe</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_violent">
+                                                <span>Violent</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="settlement_shake_extreme">
+                                                <span>Extreme</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div style='display:none;' class="row erthqk_checkbox_build erthqk_opt">
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_weak">
+                                                <span>Weak</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_light">
+                                                <span>Light</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_moderate">
+                                                <span>Moderate</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_strong">
+                                                <span>Strong</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_verystrong">
+                                                <span>Very-strong</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_severe">
+                                                <span>Severe</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_violent">
+                                                <span>Violent</span>
+                                            </label>
+                                        </div>
+                                        <div class="col s12">
+                                            <label>
+                                                <input type="checkbox" name="erthqk_checkbox" class="filled-in" value="buildings_shake_extreme">
+                                                <span>Extreme</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style='display:none;' class="row erthqk_radio_pop erthqk_opt">
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_weak" checked>Weak
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_light">Light
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_moderate">Moderate
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_strong">Strong
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_verystrong">Very-strong
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_severe">Severe
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_violent">Violent
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="pop_shake_extreme">Extreme
+                                        </label>
+                                    </div>
+                                </div>
+                                <div style='display:none;' class="row erthqk_radio_settl erthqk_opt">
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_weak">Weak
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_light">Light
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_moderate">Moderate
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_strong">Strong
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_verystrong">Very-strong
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_severe">Severe
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_violent">Violent
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="erthqk_radio" value="settlement_shake_extreme">Extreme
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <label for="themes">Pick a theme :</label>
+                                <div id="themes">
+                                    <button class="theme active" data-btn="YlOrRd"></button>
+                                    <button class="theme" data-btn="PuRd"></button>
+                                    <button class="theme" data-btn="GnBu"></button>
+                                    <button class="theme" data-btn="Blues"></button>
+                                    <button class="theme" data-btn="BuGn"></button>
+                                    <button class="theme" data-btn="BuPu"></button>
+                                    <button class="theme" data-btn="Greens"></button>
+                                    <button class="theme" data-btn="Greys"></button>
+                                    <button class="theme" data-btn="Oranges"></button>
+                                    <button class="theme" data-btn="OrRd"></button>
+                                    <button class="theme" data-btn="PuBu"></button>
+                                    <button class="theme" data-btn="PuBuGn"></button>
+                                    <button class="theme" data-btn="Purples"></button>
+                                    <button class="theme" data-btn="RdPu"></button>
+                                    <button class="theme" data-btn="Reds"></button>
+                                    <button class="theme" data-btn="YlGn"></button>
+                                    <button class="theme" data-btn="YlGnBu"></button>
+                                    <button class="theme" data-btn="YlOrBr"></button>
+                                </div>
+                            </div> 
+                        </div>
+                        <div class="col s12 l9 xl6">
+                            <div id="leaflet_erthqk_map" class="map-size"></div>
+                        </div>
+                        <div class="col s12 l12 xl4">
+                            <div id="mapInfo"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% for chart_title, chart_val in panels.charts.items %}
+            {% if  chart_title == 'building_affected_by_earthquake' or chart_title == 'pop_affected_by_earthquake' or chart_title == 'settlement_affected_by_earthquake' %}
+                <div class="col s12 m6 xl4">
+                    <div class="card card-graph">
+                        <div class="card-header red darken-3 white-text z-depth-2">
+                            <span class="card-title">{{ chart_val.title }}</span>
+                            <i class="left"></i>
+                            <span class="card-title right">{% readable chart_val.total %}</span>
+                        </div>
+                        <div class="card-image">
+                            <div id="{{ chart_title }}" class="ch-size donut-chart" data-color=colorDonut data-val='{{ chart_val.child | jsonify | safe }}'></div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col s12 m6 xl4">
+                    <div class="card card-graph">
+                        <div class="card-header red darken-3 white-text z-depth-2">
+                            <span class="card-title">{{ chart_val.title }}</span>
+                            <i class="left"></i>
+                            <span class="card-title right">{% readable chart_val.total %}</span>
+                        </div>
+                        <div class="card-image">
+                            <div id="{{ chart_title }}" class="ch-size donut-chart" data-color=colorEarthquake data-val='{{ chart_val.child | jsonify | safe }}'></div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">
+                        {% trans "Overview of Earthquake Affecting Population and Settlements" %}
+                    </span>
+                    <p>
+                        {% trans 'Shows the number of people within each of the Mercalli Intensity Scale ' %}({% blocktrans %}<a href="#popover_mercalli_desc" data-toggle="collapse">see description</a>{% endblocktrans %}). 
+                        {% trans 'These estimates are created automatically from USGS Shakemaps, which are released approximately 1 hours after strong magnitude earthquakes. Larger shake intensity generally results in more damage.' %}
+                    </p>
+                    <div id="popover_mercalli_desc" class="collapse">
+                        <br/>
+                        <table class="">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Intensity & Shaking" %}</th>
+                                    <th>{% trans "Description/Damage" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{% trans "I: Not Felt" %}</td>
+                                    <td>{% trans "Not felt except by a very few under especially favorable conditions." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="weak">{% trans "II: Weak" %}</td>
+                                    <td class="weak">
+                                        {% trans "Felt only by a few persons at rest ,especially on upper floors of buildings." %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="weak">{% trans "III: Weak" %}</td>
+                                    <td class="weak">
+                                        {% trans "Felt quite noticeably by persons indoors, especially on upper floors of buildings. Many people do not recognize it as an earthquake. Standing motor cars may rock slightly. Vibrations similar to the passing of a truck. Duration estimated." %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="light">{% trans "IV: Light" %}</td>
+                                    <td class="light">{% trans "Felt indoors by many, outdoors by few during the day. At night, some awakened. Dishes, windows, doors disturbed; walls make cracking sound. Sensation like heavy truck striking building. Standing motor cars rocked noticeably." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="modrt">{% trans "V: Moderate" %}</td>
+                                    <td class="modrt">{% trans "Felt by nearly everyone; many awakened. Some dishes, windows broken. Unstable objects overturned. Pendulum clocks may stop." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">{% trans "VI: Strong" %}</td>
+                                    <td class="strong">{% trans "Felt by all, many frightened. Some heavy furniture moved; a few instances of fallen plaster. Damage slight." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="vstrong">{% trans "VII: Very-strong" %}</td>
+                                    <td class="vstrong">{% trans "Damage negligible in buildings of good design and construction; slight to moderate in well-built ordinary structures; considerable damage in poorly built or badly designed structures; some chimneys broken." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="severe">{% trans "VIII: Severe" %}</td>
+                                    <td class="severe">{% trans "Damage slight in specially designed structures; considerable damage in ordinary substantial buildings with partial collapse. Damage great in poorly built structures. Fall of chimneys, factory stacks, columns, monuments, walls. Heavy furniture overturned." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="violent">{% trans "IX: Violent" %}</td>
+                                    <td class="violent">{% trans "Damage considerable in specially designed structures; well-designed frame structures thrown out of plumb. Damage great in substantial buildings, with partial collapse. Buildings shifted off foundations." %}</td>
+                                </tr>
+                                <tr>
+                                    <td class="extrme">{% trans "X+: Extreme" %}</td>
+                                    <td class="extrme">{% trans "Some well-built wooden structures destroyed; most masonry and frame structures destroyed with foundations. Rails bent." %}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-responsive-scroll">
+                        <table class="striped highlight online color_table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">{% trans "Region" %}</th>
+                                    <th class="weak" colspan="2">{% trans "II-III: Weak" %}</th>
+                                    <th class="light" colspan="2">{% trans "IV: Light" %}</th>
+                                    <th class="modrt" colspan="2">{% trans "V: Moderate" %}</th>
+                                    <th class="strong" colspan="2">{% trans "VI: Strong" %}</th>
+                                    <th class="vstrong" colspan="2">{% trans "VII: Very-strong" %}</th>
+                                    <th class="severe" colspan="2">{% trans "VIII: Severe" %}</th>
+                                    <th class="violent" colspan="2">{% trans "IX: Violent" %}</th>
+                                    <th class="extrme" colspan="2">{% trans "X+: Extreme" %}</th>
+                                </tr>
+                                <tr>
+                                    <th class="weak hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="weak hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="light hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="light hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="modrt hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="modrt hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="strong hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="strong hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="vstrong hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="vstrong hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="severe hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="severe hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="violent hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="violent hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="extrme hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="extrme hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for parent in panels.tables.pop_settlement.parentdata %}
+                                    <td class="boldRow">{{parent}}</td>
+                                {% endfor %}
+                                {% for child in panels.tables.pop_settlement.child %}
+                                    <tr class="selectable" onclick="window.document.location='?page=earthquake&code={{child.code}}';">
+                                        {% for item in child.value %}
+                                            <td>{{item}}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>    
+{% endblock %}
