@@ -11,17 +11,26 @@
 {% block dashboard_content %}
     <div class="row">
         {% include "qlink_list.html" %}
-        <div class="input-field col s12 xl4 right">
-            <select id="select_evt" class="right" onchange="location = '?page=earthquake&eq_event='+this.value+'{{add_link}}';">
-                {% for list in eq_list %}
-                    <option {% if list.selected %} selected {% endif %} value="{{ list.event_code }}">{{ list.detail_title }}</option>
-                {% endfor %}
-            </select>
-            <label for="select_evt">{% trans "Choose Earthquake Event" %}</label>
-        </div>
     </div>
 
     <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content row">
+                    <div class="input-field col xl4">
+                        <span class="card-title">{% trans "Earthquake Event" %}</span>
+                    </div>
+                    <div class="input-field col s12 m6 xl4 right">
+                        <select id="select_evt" class="right" onchange="location = '?page=earthquake&eq_event='+this.value+'{{add_link}}';">
+                            {% for list in eq_list %}
+                                <option {% if list.selected %} selected {% endif %} value="{{ list.event_code }}">{{ list.detail_title }}</option>
+                            {% endfor %}
+                        </select>
+                        <!-- <label for="select_evt">{% trans "Choose Earthquake Event" %}</label> -->
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="col s12">
             <div class="card">
                 <div class="card-content">
@@ -361,73 +370,16 @@
                         {% trans "Overview of Earthquake Affecting Population and Settlements" %}
                     </span>
                     <p>
-                        {% trans 'Shows the number of people within each of the Mercalli Intensity Scale ' %}({% blocktrans %}<a href="#popover_mercalli_desc" data-toggle="collapse">see description</a>{% endblocktrans %}). 
+                        {% trans 'Shows the number of people within each of the Mercalli Intensity Scale ' %}({% blocktrans %}<a class="modal-trigger" href="#popover_mercalli_desc">see description</a>{% endblocktrans %}). 
                         {% trans 'These estimates are created automatically from USGS Shakemaps, which are released approximately 1 hours after strong magnitude earthquakes. Larger shake intensity generally results in more damage.' %}
                     </p>
-                    <div id="popover_mercalli_desc" class="collapse">
-                        <br/>
-                        <table class="">
-                            <thead>
-                                <tr>
-                                    <th>{% trans "Intensity & Shaking" %}</th>
-                                    <th>{% trans "Description/Damage" %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{% trans "I: Not Felt" %}</td>
-                                    <td>{% trans "Not felt except by a very few under especially favorable conditions." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="weak">{% trans "II: Weak" %}</td>
-                                    <td class="weak">
-                                        {% trans "Felt only by a few persons at rest ,especially on upper floors of buildings." %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="weak">{% trans "III: Weak" %}</td>
-                                    <td class="weak">
-                                        {% trans "Felt quite noticeably by persons indoors, especially on upper floors of buildings. Many people do not recognize it as an earthquake. Standing motor cars may rock slightly. Vibrations similar to the passing of a truck. Duration estimated." %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="light">{% trans "IV: Light" %}</td>
-                                    <td class="light">{% trans "Felt indoors by many, outdoors by few during the day. At night, some awakened. Dishes, windows, doors disturbed; walls make cracking sound. Sensation like heavy truck striking building. Standing motor cars rocked noticeably." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="modrt">{% trans "V: Moderate" %}</td>
-                                    <td class="modrt">{% trans "Felt by nearly everyone; many awakened. Some dishes, windows broken. Unstable objects overturned. Pendulum clocks may stop." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="strong">{% trans "VI: Strong" %}</td>
-                                    <td class="strong">{% trans "Felt by all, many frightened. Some heavy furniture moved; a few instances of fallen plaster. Damage slight." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="vstrong">{% trans "VII: Very-strong" %}</td>
-                                    <td class="vstrong">{% trans "Damage negligible in buildings of good design and construction; slight to moderate in well-built ordinary structures; considerable damage in poorly built or badly designed structures; some chimneys broken." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="severe">{% trans "VIII: Severe" %}</td>
-                                    <td class="severe">{% trans "Damage slight in specially designed structures; considerable damage in ordinary substantial buildings with partial collapse. Damage great in poorly built structures. Fall of chimneys, factory stacks, columns, monuments, walls. Heavy furniture overturned." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="violent">{% trans "IX: Violent" %}</td>
-                                    <td class="violent">{% trans "Damage considerable in specially designed structures; well-designed frame structures thrown out of plumb. Damage great in substantial buildings, with partial collapse. Buildings shifted off foundations." %}</td>
-                                </tr>
-                                <tr>
-                                    <td class="extrme">{% trans "X+: Extreme" %}</td>
-                                    <td class="extrme">{% trans "Some well-built wooden structures destroyed; most masonry and frame structures destroyed with foundations. Rails bent." %}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                     <div class="table-responsive-scroll">
-                        <table class="striped highlight online color_table">
+                        <table class="striped highlight online mercalli-color">
                             <thead>
                                 <tr>
                                     <th rowspan="2">{% trans "Region" %}</th>
                                     <th class="weak" colspan="2">{% trans "II-III: Weak" %}</th>
-                                    <th class="light" colspan="2">{% trans "IV: Light" %}</th>
+                                    <th class="mlight" colspan="2">{% trans "IV: Light" %}</th>
                                     <th class="modrt" colspan="2">{% trans "V: Moderate" %}</th>
                                     <th class="strong" colspan="2">{% trans "VI: Strong" %}</th>
                                     <th class="vstrong" colspan="2">{% trans "VII: Very-strong" %}</th>
@@ -438,8 +390,8 @@
                                 <tr>
                                     <th class="weak hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
                                     <th class="weak hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
-                                    <th class="light hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
-                                    <th class="light hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
+                                    <th class="mlight hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
+                                    <th class="mlight hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
                                     <th class="modrt hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
                                     <th class="modrt hum" title='{% trans "Settlements" %}'><i class="fa fa-home"></i></th>
                                     <th class="strong hum" title='{% trans "Population" %}'><i class="fa fa-male"></i></th>
@@ -471,6 +423,73 @@
                 </div>
             </div>
         </div>
-
     </div>    
+
+    <div id="popover_mercalli_desc" class="modal bottom-sheet">
+        <div class="modal-content">
+            <table class="">
+                <thead>
+                    <tr>
+                        <th>{% trans "Intensity & Shaking" %}</th>
+                        <th>{% trans "Description/Damage" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{% trans "I: Not Felt" %}</td>
+                        <td>{% trans "Not felt except by a very few under especially favorable conditions." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="weak">{% trans "II: Weak" %}</td>
+                        <td class="weak">
+                            {% trans "Felt only by a few persons at rest ,especially on upper floors of buildings." %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="weak">{% trans "III: Weak" %}</td>
+                        <td class="weak">
+                            {% trans "Felt quite noticeably by persons indoors, especially on upper floors of buildings. Many people do not recognize it as an earthquake. Standing motor cars may rock slightly. Vibrations similar to the passing of a truck. Duration estimated." %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mlight">{% trans "IV: Light" %}</td>
+                        <td class="mlight">{% trans "Felt indoors by many, outdoors by few during the day. At night, some awakened. Dishes, windows, doors disturbed; walls make cracking sound. Sensation like heavy truck striking building. Standing motor cars rocked noticeably." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="modrt">{% trans "V: Moderate" %}</td>
+                        <td class="modrt">{% trans "Felt by nearly everyone; many awakened. Some dishes, windows broken. Unstable objects overturned. Pendulum clocks may stop." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="strong">{% trans "VI: Strong" %}</td>
+                        <td class="strong">{% trans "Felt by all, many frightened. Some heavy furniture moved; a few instances of fallen plaster. Damage slight." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="vstrong">{% trans "VII: Very-strong" %}</td>
+                        <td class="vstrong">{% trans "Damage negligible in buildings of good design and construction; slight to moderate in well-built ordinary structures; considerable damage in poorly built or badly designed structures; some chimneys broken." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="severe">{% trans "VIII: Severe" %}</td>
+                        <td class="severe">{% trans "Damage slight in specially designed structures; considerable damage in ordinary substantial buildings with partial collapse. Damage great in poorly built structures. Fall of chimneys, factory stacks, columns, monuments, walls. Heavy furniture overturned." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="violent">{% trans "IX: Violent" %}</td>
+                        <td class="violent">{% trans "Damage considerable in specially designed structures; well-designed frame structures thrown out of plumb. Damage great in substantial buildings, with partial collapse. Buildings shifted off foundations." %}</td>
+                    </tr>
+                    <tr>
+                        <td class="extrme">{% trans "X+: Extreme" %}</td>
+                        <td class="extrme">{% trans "Some well-built wooden structures destroyed; most masonry and frame structures destroyed with foundations. Rails bent." %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+    <script>
+        var centroid = boundary['centroid'];
+        var chosen_label = '{{parent_label}}';
+        var erthqk_code = '{{ eq_link | slice:"10:" }}'
+        var erthqk_link = '{{ eq_link | safe }}';
+    </script>
 {% endblock %}
