@@ -9,16 +9,16 @@
 {% endblock dashboard_breadcrumb %}
 
 {% block dashboard_content %}
-    <div class="row">
+    <div class="row no-margin">
         {% include "qlink_list.html" %}
     </div>
 
     <div class="row">
         <div class="col s12">
             <div class="card">
-                <div class="card-content row">
+                <div class="card-content row" style="padding: 0 24px;">
                     <div class="input-field col xl4">
-                        <span class="card-title">{% trans "Earthquake Event" %}</span>
+                        <span class="card-title" style="line-height: 3rem;">{% trans "Earthquake Event" %}</span>
                     </div>
                     <div class="input-field col s12 m6 xl4 right">
                         <select id="select_evt" class="right" onchange="location = '?page=earthquake&eq_event='+this.value+'{{add_link}}';">
@@ -339,11 +339,15 @@
                     <div class="card card-graph">
                         <div class="card-header red darken-3 white-text z-depth-2">
                             <span class="card-title">{{ chart_val.title }}</span>
-                            <i class="left"></i>
-                            <span class="card-title right">{% readable chart_val.total %}</span>
                         </div>
                         <div class="card-image">
                             <div id="{{ chart_title }}" class="ch-size donut-chart" data-color=colorDonut data-val='{{ chart_val.child | jsonify | safe }}'></div>
+                            <div class="center-align grey-text text-darken-2 affected-count">
+                                <span class="red-text text-darken-3">{% readable chart_val.affected %}</span>
+                                of
+                                <span class="red-text text-darken-3">{% readable chart_val.total %}</span>
+                                affected
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -427,6 +431,7 @@
 
     <div id="popover_mercalli_desc" class="modal bottom-sheet">
         <div class="modal-content">
+            <h4 class="card-title">{% trans "Mercalli Intensity Scale" %}</h4>
             <table class="">
                 <thead>
                     <tr>
