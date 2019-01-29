@@ -103,6 +103,9 @@ from tastypie.cache import SimpleCache
 from urlparse import urlparse
 import shutil
 import urllib3
+from django.conf.urls import url
+from tastypie.utils import trailing_slash
+from tastypie.authentication import BasicAuthentication, SessionAuthentication, OAuthAuthentication
 
 def get_dashboard_meta():
 	return {
@@ -117,10 +120,10 @@ def get_dashboard_meta():
 		'menutitle': 'Earthquake',
 	}
 
-def getQuickOverview(request, filterLock, flag, code, includes=[], excludes=[]):
-	response = {}
-	response.update(getEarthquake(request, filterLock, flag, code, excludes=['getListEQ']))
-	return response
+# def getQuickOverview(request, filterLock, flag, code, includes=[], excludes=[]):
+# 	response = {}
+# 	response.update(getEarthquake(request, filterLock, flag, code, excludes=['getListEQ']))
+# 	return response
 
 # moved from geodb.views
 
@@ -497,6 +500,81 @@ def getEarthquakeInfoVillages(request):
 	return render_to_response(template,
 								  RequestContext(request, context_dict))
 
+def getEarthquakeInfoVillagesCommon(village):
+	# template = './earthquakeInfo.html'
+	# village = request.GET["v"]
+
+	context_dict = getCommonVillageData(village)
+
+	# cursor = connections['geodb'].cursor()
+	# cursor.execute("\
+	#     select st_astext(a.wkb_geometry) as wkb_geometry, a.vuid, a.dist_code     \
+	#     from afg_ppla a, earthquake_shakemap b   \
+	#     where b.event_code = '"+event_code+"' and b.grid_value > 1 \
+	#     and ST_Intersects(a.wkb_geometry,b.wkb_geometry)    \
+	# ")
+	# row = cursor.fetchall()
+	# cursor.close()
+
+	context_dict['sic_1']=''
+	context_dict['sic_2']=''
+	context_dict['sic_3']=''
+	context_dict['sic_4']=''
+	context_dict['sic_5']=''
+	context_dict['sic_6']=''
+	context_dict['sic_7']=''
+	context_dict['sic_8']=''
+
+	px = AfgEqtUnkPplEqHzd.objects.all().filter(vuid=village)
+	for i in px:
+		if i.seismic_intensity_cat == 'II':
+		   context_dict['sic_1']='X'
+		if i.seismic_intensity_cat == 'III':
+		   context_dict['sic_1']='X'
+		if i.seismic_intensity_cat == 'IV':
+		   context_dict['sic_2']='X'
+		if i.seismic_intensity_cat == 'V':
+		   context_dict['sic_3']='X'
+		if i.seismic_intensity_cat == 'VI':
+		   context_dict['sic_4']='X'
+		if i.seismic_intensity_cat == 'VII':
+		   context_dict['sic_5']='X'
+		if i.seismic_intensity_cat == 'VIII':
+		   context_dict['sic_6']='X'
+		if i.seismic_intensity_cat == 'IX':
+		   context_dict['sic_7']='X'
+		if i.seismic_intensity_cat == 'X+':
+		   context_dict['sic_8']='X'
+
+	px = earthquake_shakemap.objects.all().filter(wkb_geometry__intersects=context_dict['position']).exclude(grid_value=1).values('event_code','grid_value')
+
+	event_code = []
+	event_mag = {}
+
+	data = []
+	for i in px:
+		event_code.append(i['event_code'])
+		event_mag[i['event_code']]=i['grid_value']
+
+	px = earthquake_events.objects.all().filter(event_code__in=event_code).order_by('-dateofevent')
+	for i in px:
+		data.append({'date':i.dateofevent.strftime("%Y-%m-%d %H:%M") ,'magnitude':i.magnitude,'sic':event_mag[i.event_code]})
+
+	context_dict['eq_history']=data
+	# data1 = []
+	# data2 = []
+	# data1.append(['agg_simplified_description','area_population'])
+	# data2.append(['agg_simplified_description','area_sqm'])
+	# for i in px:
+	#     data1.append([i['agg_simplified_description'],i['totalpop']])
+	#     data2.append([i['agg_simplified_description'],round(i['totalarea']/1000000,1)])
+
+	# context_dict['landcover_pop_chart'] = gchart.PieChart(SimpleDataSource(data=data1), html_id="pie_chart1", options={'title': _("# of Population"), 'width': 250,'height': 250, 'pieSliceText': _('percentage'),'legend': {'position': 'top', 'maxLines':3}})
+	# context_dict['landcover_area_chart'] = gchart.PieChart(SimpleDataSource(data=data2), html_id="pie_chart2", options={'title': _("# of Area (KM2)"), 'width': 250,'height': 250, 'pieSliceText': _('percentage'),'legend': {'position': 'top', 'maxLines':3}})
+
+	context_dict.pop('position')
+	return context_dict
+
 # moved from geodb.geoapi
 
 class EarthquakeStatisticResource(ModelResource):
@@ -650,18 +728,18 @@ class getEQEvents(ModelResource):
 
 # moved from geodb.geo_calc
 
-def getEarthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_event=''):
+def getEarthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_event='', response=dict_ext()):
 
-	response = dict_ext()
+	# response = dict_ext()
 	# eq_event = ''
 	# if 'eq_event' in request.GET:
 	# 	eq_event = request.GET['eq_event']
 
-	if include_section('', includes, excludes):
+	# if include_section('', includes, excludes):
 		# response = getCommonUse(request, flag, code)
-		targetBase = AfgLndcrva.objects.all()
+		# targetBase = AfgLndcrva.objects.all()
 
-		response['baseline'] = getBaseline(request, filterLock, flag, code, includes=['pop_lc','building_lc'])
+	response['baseline'] = response.pathget('cache','getBaseline','baseline') or getBaseline(request, filterLock, flag, code, includes=['pop_lc','building_lc'])
 		# if flag not in ['entireAfg','currentProvince']:
 		#     response['Population']=getTotalPop(filterLock, flag, code, targetBase)
 		#     response['Area']=getTotalArea(filterLock, flag, code, targetBase)
@@ -673,6 +751,8 @@ def getEarthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_
 		#     response['Area']= tempData['Area']
 		#     response['Buildings']= tempData['total_buildings']
 		#     response['settlement']= tempData['settlements']
+
+	if include_section('eq_list', includes, excludes):
 
 		url = 'http://asdc.immap.org/geoapi/geteqevents/?dateofevent__gte=2015-09-08&_dc=1473243793279'
 		req = urllib2.Request(url)
@@ -709,10 +789,11 @@ def getEarthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_
 		response['eq_list'] = list(reversed(jdict['objects']))
 		response['eq_link'] = '&eq_event='+eq_event
 		for x in response['eq_list']:
-			x['selected'] = not eq_event or (x['event_code'] == eq_event)
+			x['selected'] = bool(x['event_code'] == eq_event)
 			if x['selected']:
 				response['EQ_title'] = x['detail_title']
 
+	if include_section('getEQData', includes, excludes):
 		response['rawearthquake'] = getEQData(filterLock, flag, code, eq_event)
 
 		# for i in rawEarthquake:
@@ -720,7 +801,7 @@ def getEarthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_
 
 		for i,j in {'pop':'pop','building':'buildings','settlement':'settlement'}.items():
 			for k in EARTHQUAKE_TYPES:
-				response.path(i+'_shake')[k] = min(response['rawearthquake'].get(i+'_shake_'+k) or 0, response['baseline'][i+'_total'])
+				response.path(i+'_shake')[k] = min(response['rawearthquake'].get(j+'_shake_'+k) or 0, response['baseline'][i+'_total'])
 			response[i+'_shake_total'] = min(sum(response[i+'_shake'].values()), response['baseline'][i+'_total'])
 		
 		# if 'pop_shake_weak' in response:
@@ -1131,19 +1212,20 @@ def getEQData(filterLock, flag, code, event_code):
 
 	return counts[0]
 
-def dashboard_earthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_event=''):
+def dashboard_earthquake(request, filterLock, flag, code, includes=[], excludes=[], eq_event='', response=dict_ext()):
 
 	eq_event = eq_event or request.GET.get('eq_event') or ''
-	response = dict_ext()
+	# response = dict_ext()
 
 	if include_section('getCommonUse', includes, excludes):
 		response.update(getCommonUse(request, flag, code))
 
-	response['source'] = earthquake = getEarthquake(request, filterLock, flag, code, includes=includes, excludes=excludes, eq_event=eq_event)
+	response['source'] = earthquake = response.pathget('cache','getEarthquake') or getEarthquake(request, filterLock, flag, code, includes=includes, excludes=excludes, eq_event=eq_event)
 	baseline = earthquake['baseline']
 	panels = response.path('panels')
 	charts = panels.path('charts')
 	tables = panels.path('tables')
+	response.update(earthquake.within('eq_list'))
 
 	titles = {'pop':_('Population Affected by Earthquake'), 'settlement':_('Settlements Affected by Earthquake'), 'building':_('Building Affected by Earthquake')}
 	for k in titles:
@@ -1162,16 +1244,17 @@ def dashboard_earthquake(request, filterLock, flag, code, includes=[], excludes=
 			chart['title'] = titles[k]
 			chart['child'] = [[EARTHQUAKE_TYPES[i],earthquake[k+'_shake'][i]] for i in EARTHQUAKE_TYPES_ORDER]
 
-	titles = {'pop_settlement':_('Overview of Earthquake Affecting Population and Settlements')}
-	subkeys = {'pop_settlement':['pop','settlement']}
-	for k in titles:
-		with tables.path(k) as table:
-			table['title'] = titles[k]
-			table['parentdata'] = [response['parent_label']]+[earthquake[l+'_shake'][j] for j in EARTHQUAKE_TYPES_ORDER for l in subkeys[k]]
-			table['child'] = [{
-				'code':i['code'],
-				'value':[i['na_en']]+[i.get('%s_shake_%s'%(l,j)) or 0 for j in EARTHQUAKE_TYPES_ORDER for l in subkeys[k]],
-			} for i in earthquake['lc_child']]
+	if include_section('tables', includes, excludes):
+		titles = {'pop_settlement':_('Overview of Earthquake Affecting Population and Settlements')}
+		subkeys = {'pop_settlement':['pop','settlement']}
+		for k in titles:
+			with tables.path(k) as table:
+				table['title'] = titles[k]
+				table['parentdata'] = [response['parent_label']]+[earthquake[l+'_shake'][j] for j in EARTHQUAKE_TYPES_ORDER for l in subkeys[k]]
+				table['child'] = [{
+					'code':i['code'],
+					'value':[i['na_en']]+[i.get('%s_shake_%s'%(l,j)) or 0 for j in EARTHQUAKE_TYPES_ORDER for l in subkeys[k]],
+				} for i in earthquake['lc_child']]
 
 	if include_section('GeoJson', includes, excludes):
 		response['GeoJson'] = geojsonadd_earthquake(response)
@@ -1204,13 +1287,126 @@ def geojsonadd_earthquake(response):
 
 def getEarthquakeStatistic(request,filterLock, flag, code, eq_event=''):
 
-	panels = dashboard_earthquake(request, filterLock, flag, code, excludes=['GeoJson'], eq_event=eq_event)['panels']
+	response_dashboard_earthquake = dashboard_earthquake(request, filterLock, flag, code, excludes=['GeoJson'], eq_event=eq_event)
+	panels = response_dashboard_earthquake.pathget('panels')
+	response = response_dashboard_earthquake.within('eq_list')
+	panels_list = response.path('panels_list')
 
-	panels_list = dict_ext()
 	panels_list['charts'] = [v for k,v in panels['charts'].items() if k in ['pop_affected_by_earthquake','settlement_affected_by_earthquake','building_affected_by_earthquake','mercalli_intensity_scale_pop','mercalli_intensity_scale_settlement','mercalli_intensity_scale_building']]
 	panels_list['tables'] = [{
 		'title':v['title'],
 		'child':[v['parentdata']] + [i['value'] for i in v['child']]
 	} for k,v in panels['tables'].items() if k in ['pop_settlement']]
 
-	return panels_list
+	return response
+
+class EarthquakeInfoVillages(Resource):
+
+	class Meta:
+		resource_name = 'earthquake'
+		authentication = SessionAuthentication()
+
+	def prepend_urls(self):
+		name = self._meta.resource_name
+		return [
+			url(r"^%s%s$" % (name, trailing_slash()), self.wrap_view('getdata'), name='get_%s'%(name)),
+		]
+
+	def getdata(self, request, **kwargs):
+		self.method_check(request, allowed=['get'])
+		self.is_authenticated(request)
+		self.throttle_check(request)
+
+		data = getEarthquakeInfoVillagesCommon(request.GET.get('vuid'))
+		response = {
+			'panels_list':{
+				'tables':[
+					{
+						'key':'base_info',
+						'child':[
+							[_('Settlement'),data.get('name_en')],
+							[_('District'),data.get('dist_na_en')],
+							[_('Province'),data.get('prov_na_en')],
+							[_('Area'),data.get('area_sqm')],
+							[_('Total Population'),data.get('area_population')],
+						],
+					},
+					{
+						'key':'earthquake_hazard_risk',
+						'title':_('Earthquake Hazard Risk')+'*',
+						'child':[
+							["II-III Weak",data.get('sic_1','')],
+							["IV Light",data.get('sic_2','')],
+							["V Moderate",data.get('sic_3','')],
+							["VI Strong",data.get('sic_4','')],
+							["VII Very Strong",data.get('sic_5','')],
+							["VIII Severe",data.get('sic_6','')],
+							["IX Violent",data.get('sic_7','')],
+							["X+ Extreme",data.get('sic_8','')],							
+						],
+						'footnotes':[
+							'*'+_('Seismic intensity and description of potential damage (USGS, 2007)'),
+							_('Peak Horizontal Acceleration with 2 Percent Probability of Exceedance in 50 years')+'**',
+						]
+					},
+					{
+						'key':'latest_20_earthquakes',
+						'title':_('Latest 20 earthquakes')+'*',
+						'child':[{
+							'date':item.get('date'),
+							'child':[
+								["II-III Weak",'X' if (int(item.get('sic',0)) in [2,3]) else ''],
+								["IV Light",'X' if int(item.get('sic',0)==4) else ''],
+								["V Moderate",'X' if int(item.get('sic',0)==5) else ''],
+								["VI Strong",'X' if int(item.get('sic',0)==6) else ''],
+								["VII Very Strong",'X' if int(item.get('sic',0)==7) else ''],
+								["VIII Severe",'X' if int(item.get('sic',0)==8) else ''],
+								["IX Violent",'X' if int(item.get('sic',0)==9) else ''],
+								["X+ Extreme",'X' if int(item.get('sic',0)>=10) else ''],							
+							],
+						} for item in data.get('eq_history',[])],
+					},
+					{
+						'key':'description',
+						'title':_('Description'),
+						'columntitles':[
+							_('Intensity'),
+							_('Shaking'),
+							_('Description/Damage'),
+						],
+						'child':[
+							[_('I'),_('Not felt'),_('Not felt except by a very few under especially favorable conditions.'),],
+							[_('II'),_('Weak'),_('Felt only by a few persons at rest,especially on upper floors of buildings.'),],
+							[_('III'),_('Weak'),_('Felt quite noticeably by persons indoors, especially on upper floors of buildings. Many people do not recognize it as an earthquake. Standing motor cars may rock slightly. Vibrations similar to the passing of a truck. Duration estimated.'),],
+							[_('IV'),_('Light'),_('Felt indoors by many, outdoors by few during the day. At night, some awakened. Dishes, windows, doors disturbed; walls make cracking sound. Sensation like heavy truck striking building. Standing motor cars rocked noticeably.'),],
+							[_('V'),_('Moderate'),_('Felt by nearly everyone; many awakened. Some dishes, windows broken. Unstable objects overturned. Pendulum clocks may stop.'),],
+							[_('VI'),_('Strong'),_('Felt by all, many frightened. Some heavy furniture moved; a few instances of fallen plaster. Damage slight.'),],
+							[_('VII'),_('Very strong'),_('Damage negligible in buildings of good design and construction; slight to moderate in well-built ordinary structures; considerable damage in poorly built or badly designed structures; some chimneys broken.'),],
+							[_('VIII'),_('Severe'),_('Damage slight in specially designed structures; considerable damage in ordinary substantial buildings with partial collapse. Damage great in poorly built structures. Fall of chimneys, factory stacks, columns, monuments, walls. Heavy furniture overturned.'),],
+							[_('IX'),_('Violent'),_('Damage considerable in specially designed structures; well-designed frame structures thrown out of plumb. Damage great in substantial buildings, with partial collapse. Buildings shifted off foundations.'),],
+							[_('X+'),_('Extreme'),_('Some well-built wooden structures destroyed; most masonry and frame structures destroyed with foundations. Rails bent.'),],
+						],
+						'footnotes':[
+							'**'+_('A 2 percent probability of exceedance in 50 years corresponds to a ground-motion return time of approximately 2500 years, or approximately a 10% probability of of exceedance in 250 years. . The seismic intensity data and classes originate from the USGS Earthquake Hazard Map for Afghanistan (2007), by By Oliver S. Boyd, Charles S. Mueller, and Kenneth S. Rukstales'),
+						]
+					},
+				],
+			},
+		}
+
+		return self.create_response(request, response)
+
+def getQuickOverview(request, filterLock, flag, code, response=dict_ext()):
+	
+	eq_event = request.GET.get('eq_event') or ''
+
+	response.path('cache')['getEarthquake'] = response.pathget('cache','getEarthquake') or getEarthquake(request, filterLock, flag, code, includes=['eq_list','getEQData'], eq_event=eq_event, response=response.within('cache'))
+	dashboard_earthquake_response = dashboard_earthquake(request, filterLock, flag, code, includes=[''], response=response.within('cache','parent_label'))
+	
+	return {
+		'templates':{
+			'panels':'dash_qoview_earthquake.html',
+		},
+		'data':dict_ext(dashboard_earthquake_response).within('panels','eq_list','add_link'),
+	}
+	

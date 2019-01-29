@@ -1,0 +1,6 @@
+include LICENSE
+include VERSION
+include README.rst
+recursive-include earthquake/locale *
+recursive-include earthquake/templates *
+recursive-include earthquake/migrations *

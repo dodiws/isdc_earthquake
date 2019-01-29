@@ -1,0 +1,3 @@
+{% with chart=data.panels.charts.mercalli_intensity_scale_building %}
+{% include "dash_chart_pie.html" with title=chart.title icon="icon-people_affected_population" key="mercalli_intensity_scale_building" values=chart.child eq_list=data.eq_list datacolor="colorEarthquake" %}
+{% endwith %}
